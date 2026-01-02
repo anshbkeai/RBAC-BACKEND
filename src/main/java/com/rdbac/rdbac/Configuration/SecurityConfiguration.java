@@ -2,6 +2,7 @@ package com.rdbac.rdbac.Configuration;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -21,6 +22,9 @@ public class SecurityConfiguration {
 
     private JwtFilter jwtFilter;
     private final CorrelationIdFilter correlationIdFilter;
+    
+    @Value("${REACT_APP_URL}")
+    private String reactAppUri;
    public SecurityConfiguration(JwtFilter jwtFilter ,
                                 CorrelationIdFilter correlationIdFilter
 
@@ -48,7 +52,7 @@ public class SecurityConfiguration {
     @Bean
     public UrlBasedCorsConfigurationSource corsConfiguration() {
         CorsConfiguration  corsConfiguration   =  new CorsConfiguration();
-        corsConfiguration.setAllowedOrigins(List.of("http://localhost:5173" , "http://localhost:5500"));   //  in th  Prod  we  need  to  se  the   React app  hosted  Url  
+        corsConfiguration.setAllowedOrigins(List.of(reactAppUri));   //  in th  Prod  we  need  to  se  the   React app  hosted  Url  
         corsConfiguration.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         corsConfiguration.setAllowedHeaders(List.of("*"));
         corsConfiguration.setAllowCredentials(true);
