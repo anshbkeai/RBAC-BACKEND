@@ -21,4 +21,6 @@ public class Organisation {
 
     private Set<String> user_id_registred;
 
+     private Set<String> rolesId;
+
 }

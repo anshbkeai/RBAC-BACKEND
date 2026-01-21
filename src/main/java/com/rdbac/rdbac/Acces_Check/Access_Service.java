@@ -21,7 +21,6 @@ public class Access_Service {
     public boolean isallowed(Access_Dto access_Dto)  {
         String app_user_id = app_User_Core_ServiceImplementaion.getAppUserIdByEmail(access_Dto.getUser_email());
         return organisation_Memership_Service.is_user_roles_permmision_org(app_user_id, access_Dto.getOrg_id(),
-                 (access_Dto.getRole()),
                  (access_Dto.getPermission()));
     }
 }

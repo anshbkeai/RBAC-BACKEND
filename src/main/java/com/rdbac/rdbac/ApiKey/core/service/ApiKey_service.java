@@ -11,6 +11,7 @@ import com.rdbac.rdbac.ApiKey.config.HashGenrator;
 import com.rdbac.rdbac.ApiKey.core.dto.ApiKey_dto;
 import com.rdbac.rdbac.ApiKey.core.model.ApiKey;
 import com.rdbac.rdbac.ApiKey.core.repo.ApiKeyRepo;
+import com.rdbac.rdbac.Organisation.Service.OrganisationService;
 import com.rdbac.rdbac.Organisation.Service.Organisation_Memership_Service;
 import com.rdbac.rdbac.Pojos.App_User;
 import com.rdbac.rdbac.ServiceImplementation.App_User_Core_ServiceImplementaion;
@@ -28,18 +29,21 @@ public class ApiKey_service {
 
     private final App_User_Core_ServiceImplementaion app_User_Core_ServiceImplementaion;
     private final Organisation_Memership_Service organisation_Memership_Service;
+    private final OrganisationService organisationService;
     private final HashGenrator hashGenrator;
     private final ApiKeyRepo apiKeyRepo;
 
     public ApiKey_service(App_User_Core_ServiceImplementaion app_User_Core_ServiceImplementaion , 
                             Organisation_Memership_Service organisation_Memership_Service,
                             HashGenrator hashGenrator,
-                            ApiKeyRepo apiKeyRepo
+                            ApiKeyRepo apiKeyRepo,
+                            OrganisationService organisationService
     ) {
         this.app_User_Core_ServiceImplementaion = app_User_Core_ServiceImplementaion;
         this.organisation_Memership_Service = organisation_Memership_Service;
         this.hashGenrator = hashGenrator;
         this.apiKeyRepo= apiKeyRepo;
+        this.organisationService = organisationService;
     }
 
     // methiod to gernate aout the. api key 
@@ -56,8 +60,7 @@ public class ApiKey_service {
     // 2. Fetch user object
 
     // 3. Permission check
-    boolean allowed = organisation_Memership_Service.is_user_roles_permmision_org(
-            app_User_Core_ServiceImplementaion.getAppUserIdByEmail(user_email), apiKey_dto.getOrgid(), "ADMIN", null);
+    boolean allowed = organisationService.isAdminUserByEmail(apiKey_dto.getOrgid(), user_email);
 
     if (allowed) {
         log.info("User [{}] for organization [{}] passed ADMIN permission check", user_email, apiKey_dto.getOrgid());
@@ -120,8 +123,7 @@ public class ApiKey_service {
 
 
     public boolean isApiKeyGenrated(ApiKey_dto apiKey_dto, String user_email) {
-        boolean allowed = organisation_Memership_Service.is_user_roles_permmision_org(
-            app_User_Core_ServiceImplementaion.getAppUserIdByEmail(user_email), apiKey_dto.getOrgid(), "ADMIN", null);
+        boolean allowed = organisationService.isAdminUserByEmail(apiKey_dto.getOrgid(), user_email);
         if(allowed) {
            return apiKeyRepo.findByOrgId(apiKey_dto.getOrgid()).isPresent();
         }

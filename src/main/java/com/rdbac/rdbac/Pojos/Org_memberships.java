@@ -17,8 +17,10 @@ public  class Org_memberships {
     private String org_user_member_id;
     private String org_id;
     private String user_id;
-    private Set<String> roles;
+    private Set<String> roles; // this is to be deperceted for the user .  
     private Set<String> permission;
     private Date added_at;
+
+    private Set<String> rolesId; // this is newly V2 feature 
 
 }

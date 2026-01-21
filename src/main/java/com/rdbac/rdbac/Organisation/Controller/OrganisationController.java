@@ -124,6 +124,11 @@ public class OrganisationController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @GetMapping("/{org_id}/permissions")
+    public ResponseEntity<List<String>> getPermissions(@PathVariable String org_id) {
+        return new ResponseEntity<>(organisationService.getOrganisationPermissions(org_id), HttpStatus.OK);
+    }
+    
     
    
 

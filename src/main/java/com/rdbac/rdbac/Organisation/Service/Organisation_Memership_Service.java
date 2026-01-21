@@ -5,11 +5,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.rdbac.rdbac.Pojos.Org_memberships;
 import com.rdbac.rdbac.Repositry.Organisation_Memebership_Repository;
+import com.rdbac.rdbac.Role_Permission.application.service.RoleCoreService;
+import com.rdbac.rdbac.Role_Permission.domain.model.Role;
 import com.rdbac.rdbac.audit.domain.model.Audit;
 import com.rdbac.rdbac.exceptions.InvalidRolePermissionRequestException;
 import com.rdbac.rdbac.exceptions.MembershipNotFoundException;
@@ -48,9 +51,14 @@ import lombok.extern.slf4j.Slf4j;
 public class Organisation_Memership_Service {
 
     private final Organisation_Memebership_Repository organisation_Memebership_Repository;
+    private final RoleCoreService roleCoreService;
 
-    public Organisation_Memership_Service(Organisation_Memebership_Repository organisation_Memebership_Repository) {
+    public Organisation_Memership_Service(Organisation_Memebership_Repository organisation_Memebership_Repository,
+
+                                            RoleCoreService roleCoreService
+    ) {
         this.organisation_Memebership_Repository = organisation_Memebership_Repository;
+        this.roleCoreService = roleCoreService;
     }
 
     public Org_memberships get_org_user_Memberships(String user_id , String org_id) {
@@ -68,16 +76,15 @@ public class Organisation_Memership_Service {
         targetType = "ORGANISATION_MEMBERSHIP",
         targetId = "#p0"
     )
-    public void add_user_to_membership(String user_id, String org_id, Set<String> roles , Set<String> permission) {
+    public void add_user_to_membership(String user_id, String org_id, Set<String> rolesId) {
         Org_memberships org_memberships = new Org_memberships();
         org_memberships.setOrg_id(org_id);
         org_memberships.setUser_id(user_id);
-        org_memberships.setRoles(roles != null ? new HashSet<>(roles) : new HashSet<>());
-        org_memberships.setPermission(permission != null ? new HashSet<>(permission) : new HashSet<>());
+        org_memberships.setRolesId(rolesId);
         org_memberships.setOrg_user_member_id(UUID.randomUUID().toString());
         org_memberships.setAdded_at(new Date());
         organisation_Memebership_Repository.save(org_memberships);
-        log.info("Added user {} to org {} with roles {} and permissions {}", user_id, org_id, roles, permission);
+        log.info("Added user {} to org {} with roles {}", user_id, org_id, rolesId);
     }
 
 
@@ -116,7 +123,7 @@ public class Organisation_Memership_Service {
         targetType = "ORGANISATION_MEMBERSHIP",
         targetId = "#p0"
     )
-    public void update_role_permission(String user_id, String org_id, Set<String> roles , Set<String> permission) {
+    public void update_role_permission(String user_id, String org_id, Set<String> rolesId) {
         Org_memberships org_memberships= organisation_Memebership_Repository.findByOrg_idandfindByUser_id(org_id, user_id);
         
         // what if you are assing about the Means about this is the different api that we are means
@@ -124,14 +131,14 @@ public class Organisation_Memership_Service {
         // and we need also handle about the null values in that what if he exits 
        if(org_memberships == null) {
         //means about that user who is going to be addedin th e org does not exits 
-            add_user_to_membership(user_id, org_id, roles, permission);
+            add_user_to_membership(user_id, org_id, rolesId);
             return;
        }
        
-        org_memberships.setRoles(new HashSet<>(roles));
+        //org_memberships.setRoles(new HashSet<>(roles));
 
-     
-      org_memberships.setPermission(new HashSet<>(permission));
+       org_memberships.setRolesId(rolesId);
+      //org_memberships.setPermission(new HashSet<>(permission));
 
        org_memberships.setAdded_at(new Date());
 
@@ -156,28 +163,16 @@ public class Organisation_Memership_Service {
  * Allowing empty strings introduces ambiguity and may lead to unexpected access control behaviors.
  * This validation step helps enforce strict and predictable access logic by rejecting any invalid assignments.
  */
-    public boolean is_user_roles_permmision_org(String user_id, String org_id, String roles ,String permission) {
+    public boolean is_user_roles_permmision_org(String user_id, String org_id,String requiredPermission) {
         log.info("Org id {} ,  user id {}" , org_id , user_id);
         Org_memberships org_memberships= organisation_Memebership_Repository.findByOrg_idandfindByUser_id(org_id, user_id);
         if(org_memberships == null) {
             throw new MembershipNotFoundException("Membership not found for user in organization");
         }
-        boolean isRoleAllowed = false;
-        boolean isPermissionAllowed =false;
-        if(roles == null && permission == null) {
-            throw new InvalidRolePermissionRequestException("Either role or permission must be provided");
-        }
-        else if(roles == null && permission != null) {
-            isRoleAllowed = true;
-        }
-         else if(roles != null && permission == null) {
-            isPermissionAllowed = true;
-        }
-        if(org_memberships.getRoles() != null && org_memberships.getRoles().contains("ADMIN")) return true;
-        if(roles != null && org_memberships.getRoles() != null )  isRoleAllowed =org_memberships.getRoles().contains(roles);
-        if(permission != null && org_memberships.getPermission() != null ) isPermissionAllowed =org_memberships.getPermission().contains(permission);
+
+        List<Role> roles = roleCoreService.getRolesByIds(org_memberships.getRolesId());
+        return roles.stream().flatMap(role -> role.getPermissions().stream()).collect(Collectors.toSet()).contains(requiredPermission);
         
-        return isRoleAllowed && isPermissionAllowed;
     }
 
 

@@ -18,6 +18,8 @@ import com.rdbac.rdbac.Pojos.Org_memberships;
 import com.rdbac.rdbac.Pojos.Organisation;
 import com.rdbac.rdbac.Repositry.Organisation_Memebership_Repository;
 import com.rdbac.rdbac.Repositry.Organisation_Repositry;
+import com.rdbac.rdbac.Role_Permission.application.service.RoleCoreService;
+import com.rdbac.rdbac.Role_Permission.domain.model.Role;
 import com.rdbac.rdbac.ServiceImplementation.App_User_Core_ServiceImplementaion;
 import com.rdbac.rdbac.audit.domain.model.Audit;
 import com.rdbac.rdbac.exceptions.InvalidRolePermissionConfigException;
@@ -34,15 +36,18 @@ public class OrganisationService {
     private Organisation_Repositry organisation_Repositry;
     private Organisation_Memebership_Repository organisation_Memebership_Repository;
     private App_User_Core_ServiceImplementaion app_User_Core_ServiceImplementaion;
+    private RoleCoreService roleCoreService;
 
     public OrganisationService(
         Organisation_Repositry organisation_Repositry,
         Organisation_Memebership_Repository organisation_Memebership_Repository,
-        App_User_Core_ServiceImplementaion app_User_Core_ServiceImplementaion
+        App_User_Core_ServiceImplementaion app_User_Core_ServiceImplementaion,
+        RoleCoreService roleCoreService
     ) {
             this.organisation_Memebership_Repository = organisation_Memebership_Repository;
             this.organisation_Repositry = organisation_Repositry;
             this.app_User_Core_ServiceImplementaion = app_User_Core_ServiceImplementaion;
+            this.roleCoreService = roleCoreService;
     }
 
     // create 
@@ -106,6 +111,12 @@ public class OrganisationService {
 
         organisation.setUser_id_registred(new HashSet<>(List.of(user_created_email)));
 
+       Set<String> rolesId = new HashSet<>();
+        for(String roleName : orgainsationDto.getCustomRoles()) {
+            rolesId.add(roleCoreService.createRole(roleName, organisation.getOrg_id()));
+        }
+        organisation.setRolesId(rolesId);
+
         log.info("Creating organisation with name: {}", organisation.getName());
         organisation_Repositry.save(organisation);
 
@@ -118,12 +129,12 @@ public class OrganisationService {
         memberships.setUser_id(app_User_Core_ServiceImplementaion.getAppUserIdByEmail(user_created_email)); // fixed the bug about the incomistey of the data about saving thr user created email and for totjer id that create the inconsisteny of the data 
         memberships.setRoles(new HashSet<>(List.of("ADMIN")));
         memberships.setPermission(new HashSet<>(List.of("ALL")));
+        memberships.setRolesId(rolesId); // Creator will have all roles assigned
 
         organisation_Memebership_Repository.save(memberships);
 
         //
         app_User_Core_ServiceImplementaion.Add_Organisation_to_User(user_created_email, organisation.getOrg_id());
-
 
         return organisation;
     }
@@ -226,7 +237,19 @@ public class OrganisationService {
                                                 .user_roles(memberships != null  ? memberships.getRoles() : new HashSet<>())
                                                 .available_roles(organisation.getCustome_roles_Created())
                                                 .available_permissions(organisation.getCustom_permission_Created())
+                                                .roles(memberships != null ?  roleCoreService.getRolesByIds(memberships.getRolesId()): List.of())
                                                 .build()
                                                 ;
+    }
+
+    public boolean isAdminUserByEmail(String org_id, String userEmail) {
+        Org_memberships memberships = organisation_Memebership_Repository.findByOrg_idandfindByUser_id(org_id,app_User_Core_ServiceImplementaion.getAppUserIdByEmail(userEmail));
+        if(memberships == null) return false;
+        return memberships.getRoles().contains("ADMIN");
+    }
+
+    public List<String> getOrganisationPermissions(String org_id) {
+        Organisation organisation = organisation_Repositry.findById(org_id).orElseThrow(() -> new OrganizationNotFoundException("Organization not found"));
+        return organisation.getCustom_permission_Created().stream().toList();
     }
 }
