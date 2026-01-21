@@ -10,9 +10,6 @@ public class Access_Dto {
 
     private String user_email;
     private String org_id;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String permission;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String role;
 
 }

@@ -3,6 +3,8 @@ package com.rdbac.rdbac.Organisation.DTO;
 import java.util.List;
 import java.util.Set;
 
+import com.rdbac.rdbac.Role_Permission.domain.model.Role;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,4 +18,7 @@ public class OrganisationUserRolePermissionDto {
      private List<String> available_roles;
      private List<String> available_permissions;
      
+
+     // to show what are the roles and permissions are assigned to the user in the perticular org
+     private List<Role> roles;
 }
