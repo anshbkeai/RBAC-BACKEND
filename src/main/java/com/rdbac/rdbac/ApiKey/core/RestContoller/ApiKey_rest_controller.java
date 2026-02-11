@@ -71,6 +71,14 @@ public class ApiKey_rest_controller {
         return new ResponseEntity<>(Map.of("check",apiKey_service.isApiKeyGenrated(entity , get_Authenticated_User())), HttpStatus.OK);
     }
     
+    @PostMapping("/revoke")
+    public ResponseEntity<Map< String, String>> revokeApiKey(@RequestParam String orgID) throws NoSuchAlgorithmException {
+        String user_email = get_Authenticated_User();
+        apiKey_service.revokeApiKey(orgID, user_email);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "API key revoked successfully ");
+        return new ResponseEntity<>(response, HttpStatus.OK); 
+    }
 
     
 }

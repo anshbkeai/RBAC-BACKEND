@@ -1,6 +1,7 @@
 package com.rdbac.rdbac.ApiKey.core.service;
 
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.rdbac.rdbac.ApiKey.config.HashGenrator;
 import com.rdbac.rdbac.ApiKey.core.dto.ApiKey_dto;
 import com.rdbac.rdbac.ApiKey.core.model.ApiKey;
+import com.rdbac.rdbac.ApiKey.core.model.ApiKeyStatus;
 import com.rdbac.rdbac.ApiKey.core.repo.ApiKeyRepo;
 import com.rdbac.rdbac.Organisation.Service.OrganisationService;
 import com.rdbac.rdbac.Organisation.Service.Organisation_Memership_Service;
@@ -105,6 +107,7 @@ public class ApiKey_service {
         apiKey.setHash_api_key(api_key_hash);
         apiKey.setOrgId(org_id);
         apiKey.setCreated_by_user_email(user_email);
+        apiKey.setStatus(ApiKeyStatus.ACTIVE);
 
         apiKeyRepo.save(apiKey);
         log.info("Api- key Genrated aboout {}" ,apiKey.toString());
@@ -118,14 +121,14 @@ public class ApiKey_service {
         // Bug . Logggin about the Api-key in the lOgs 
         log.info("Api-key  by user {}. and Hashed {}", api_key_hash,hased);
         Optional<ApiKey> optional  = apiKeyRepo.findById(hased);
-        return optional.isPresent();
+        return optional.isPresent() && optional.get().getStatus() == ApiKeyStatus.ACTIVE; // you can handle about the status of the api key in here like if is revoked or expired then you can return false in that case
     }
 
 
     public boolean isApiKeyGenrated(ApiKey_dto apiKey_dto, String user_email) {
         boolean allowed = organisationService.isAdminUserByEmail(apiKey_dto.getOrgid(), user_email);
         if(allowed) {
-           return apiKeyRepo.findByOrgId(apiKey_dto.getOrgid()).isPresent();
+           return apiKeyRepo.findByOrgIdAndStatus(apiKey_dto.getOrgid(), ApiKeyStatus.ACTIVE).isPresent();
         }
         else {
              throw new ApiKeyPermissionDeniedException("Not allowed to create API key");
@@ -133,4 +136,37 @@ public class ApiKey_service {
         }
 
     }
+
+    @Audit(
+        action = "API-KEY-REVOKED",
+        orgId = "#p0",
+        targetType = "API_KEY",
+        targetId = "#p2"
+    )
+    public void revokeApiKey(String orgID, String user_email) throws NoSuchAlgorithmException {
+       
+        Optional<ApiKey> optional  = apiKeyRepo.findByOrgIdAndStatus(orgID, ApiKeyStatus.ACTIVE);
+        if(optional.isPresent()) {
+            ApiKey apiKey = optional.get();
+            boolean allowed = organisationService.isAdminUserByEmail(apiKey.getOrgId(), user_email);
+            if(allowed && apiKey.getStatus() == ApiKeyStatus.ACTIVE) {
+                apiKey.setStatus(ApiKeyStatus.REVOKED);
+                apiKey.setRevoked_at(Instant.now());
+                apiKey.setRevoked_by_user_email(user_email);
+                apiKeyRepo.save(apiKey);
+                log.info("API key with hash [{}] revoked by user [{}]", apiKey.getHash_api_key(), user_email);
+            }
+            else {
+                log.warn("Unauthorized attempt by user [{}] to revoke API key with hash [{}]", user_email, apiKey.getHash_api_key());
+                throw new ApiKeyPermissionDeniedException("Not allowed to revoke API key");
+            }
+        }
+        else {
+            log.warn("Attempt to revoke non-existent API key with hash [{}] by user [{}]", "NUll", user_email);
+            throw new IllegalArgumentException("API key not found");
+        }
+    }
 }
+
+
+// we are not about that making the api revoke the Selectuve we still belive that the api key will be only one for the org and if you want to genrate about the new api key then you have to revoke the old one and genrate about the new one.

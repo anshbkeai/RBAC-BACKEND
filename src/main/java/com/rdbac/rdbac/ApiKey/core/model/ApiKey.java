@@ -1,5 +1,6 @@
 package com.rdbac.rdbac.ApiKey.core.model;
 
+import java.time.Instant;
 import java.util.Date;
 
 import org.springframework.data.annotation.Id;
@@ -20,6 +21,9 @@ public class ApiKey {
     private Date created_at;
     private String created_by_user_email;
 
+    private Instant revoked_at;
+    private String revoked_by_user_email;
+    private ApiKeyStatus status;
     //we are about the. api -key will be only one 
 
     // hey we are making about that no that changes about in teh org_repo .  
