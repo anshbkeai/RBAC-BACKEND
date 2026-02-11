@@ -48,5 +48,16 @@ public class Roles_Permission_Rest_routes {
         log.info(roleRquestDto.toString());
         return new ResponseEntity<Map<String,Object>>(new HashMap<>(Map.of("message", "Assgined Role and Permisson")), HttpStatus.OK);
     }
+
+     @PutMapping("/v2/assign")
+    public ResponseEntity<Map<String,Object>> assignRoleAndPermissionV2(@RequestBody RoleRquestDto  roleRquestDto) {
+       
+        // about what you will do is simple bout that you will add them to us in about the route in the layman terms 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("The Auth Object. is. "+authentication.getName());
+        role_Service.Assign_Role_Permission(roleRquestDto, authentication.getName());
+        log.info(roleRquestDto.toString());
+        return new ResponseEntity<Map<String,Object>>(new HashMap<>(Map.of("message", "Assgined Role and Permisson")), HttpStatus.OK);
+    }
     
 }

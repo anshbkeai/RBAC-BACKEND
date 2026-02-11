@@ -1,5 +1,10 @@
 package com.rdbac.rdbac.Role_Permission.application.service;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 
 import com.rdbac.rdbac.Organisation.Service.OrganisationService;
@@ -18,14 +23,17 @@ public class Role_Service {
     private final App_User_Core_ServiceImplementaion app_User_Core_ServiceImplementaion;
     private final OrganisationService organisationService;
     private final Organisation_Memership_Service organisation_Memership_Service;
+    private RoleCoreService roleCoreService;
 
     public Role_Service(App_User_Core_ServiceImplementaion app_User_Core_ServiceImplementaion,
                         OrganisationService organisationService,
-                        Organisation_Memership_Service organisation_Memership_Service
+                        Organisation_Memership_Service organisation_Memership_Service,
+                        RoleCoreService roleCoreService
     ) {
         this.app_User_Core_ServiceImplementaion = app_User_Core_ServiceImplementaion;
         this.organisationService = organisationService;
         this.organisation_Memership_Service  = organisation_Memership_Service;
+        this.roleCoreService = roleCoreService;
     }
 
     // CRUD operations are pending implementation. Focus on completing these functionalities.
@@ -55,14 +63,16 @@ public class Role_Service {
             throw new ApiKeyPermissionDeniedException("Insufficient permission to assign roles/permissions");
 
         }
+        Set<String> filterroleIds = roleCoreService.getRolesByIds(roleRquestDto.getRolesassignedId()).stream().map(role -> role.getRoleId()).collect(Collectors.toSet());
 
         // i. can assing  the permission. to. the. user so 
         // org_mer update
         // update that only 
 
-        organisation_Memership_Service.update_role_permission(app_User.getUser_id(),organisation.getOrg_id() , roleRquestDto.getRoles_assigned(), roleRquestDto.getPermission_assigned());
+        organisation_Memership_Service.update_role_permission(app_User.getUser_id(),organisation.getOrg_id() ,filterroleIds);
 
 
     }
 
+    
 }
