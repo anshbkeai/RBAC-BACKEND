@@ -128,7 +128,7 @@ public class Email_Invite_Service {
         e.printStackTrace();
     }
 
-    return "SENT";
+    return "Email Invite Queued Successfully";
        
       
     }

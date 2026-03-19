@@ -15,7 +15,7 @@ public class QueuesConfig {
 
      public static final String EMAIL_QUEUE = "email.queue";
    // static final String NOTIFICATION_QUEUE = "order.notification.queue";
-    static final String EMAIL_DLQ = "email.dlq";
+   public static final String EMAIL_DLQ = "email.dlq";
     //static final String NOTIFICATION_DLQ = "order.notification.dlq";
     static final Integer DLQ_TTL = 1000*60*5;
 

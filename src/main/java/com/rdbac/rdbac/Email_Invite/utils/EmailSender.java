@@ -1,5 +1,6 @@
 package com.rdbac.rdbac.Email_Invite.utils;
 
+import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -114,7 +115,13 @@ public class EmailSender {
             );
 
         } catch (Exception e) {
-            throw new EmailSendException("Failed to send email via SendGrid", e);
+            throw new AmqpRejectAndDontRequeueException("Failed to send email via SendGrid", e);
         }
+    }
+
+    @RabbitListener(queues = QueuesConfig.EMAIL_DLQ)
+    public void handleEmailDql(String emailQueueDtoJson) throws JsonMappingException, JsonProcessingException  {
+        log.error("Failed to send email: {}", emailQueueDtoJson);
+        System.out.println(emailQueueDtoJson);
     }
 }
