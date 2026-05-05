@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.rdbac.rdbac.Organisation.DTO.OrganisationMembershipDTO;
 import com.rdbac.rdbac.Pojos.Org_memberships;
 import com.rdbac.rdbac.Repositry.Organisation_Memebership_Repository;
 import com.rdbac.rdbac.Role_Permission.application.service.RoleCoreService;
@@ -69,6 +70,25 @@ public class Organisation_Memership_Service {
         return organisation_Memebership_Repository.findByUser_id( user_id);
     }
 
+    public List<OrganisationMembershipDTO> getuserMembershipsV1(String user_id) {
+        return organisation_Memebership_Repository.findByUser_id( user_id).stream()
+                .map(org -> organisationMembershipDTO(org)).toList();
+    }
+
+     private OrganisationMembershipDTO organisationMembershipDTO(Org_memberships memberships) {
+        Set<String> roles = roleCoreService.getRolesByIds(memberships.getRolesId()).stream()
+                                            .map(role -> role.getRoleName()).collect(Collectors.toSet());
+        return OrganisationMembershipDTO.builder()
+                                        
+                                        .org_id(memberships.getOrg_id())
+                                        .permission(memberships.getPermission())
+                                        .roles(roles)
+                                        .user_id(memberships.getUser_id())
+                                        .added_at(memberships.getAdded_at())
+                                        .build()
+                                        ;
+                                        
+    }
     
     @Audit(
         action = "MEMBERSHIP_CREATED",

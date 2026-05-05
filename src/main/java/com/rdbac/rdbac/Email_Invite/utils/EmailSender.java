@@ -72,16 +72,22 @@ public class EmailSender {
          Email_Invitation emailInvitation = emailQueueDto.getEmailInvitation();
          String token = emailQueueDto.getToken();
 
-        log.info("[{}] Starting email send to {} count is {}", Thread.currentThread().getName(), emailInvitation.getUserRecivedEmail(),count++);
-
-        
+         log.info("[{}] Starting email send to {} count is {}", Thread.currentThread().getName(), emailInvitation.getUserRecivedEmail(),count++);
+        StringBuilder verificationLink = new StringBuilder();
+        verificationLink.append(reactAppUri);
+        if(emailQueueDto.isNewUser()) {
+            verificationLink.append("/signup?inviteToken=").append(token);
+        }
+        else {
+            verificationLink.append("/email/accept/").append(token);
+        }
          try {
             // Thymeleaf processing
             Context context = new Context();
             context.setVariable("sent_user", emailInvitation.getUser_sent_email());
             context.setVariable(
                     "verificationLink",
-                    reactAppUri + "/email/accept/" + token
+                    verificationLink.toString()
             );
 
             String htmlContent =

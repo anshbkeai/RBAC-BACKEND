@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -245,7 +247,11 @@ public class OrganisationService {
     public boolean isAdminUserByEmail(String org_id, String userEmail) {
         Org_memberships memberships = organisation_Memebership_Repository.findByOrg_idandfindByUser_id(org_id,app_User_Core_ServiceImplementaion.getAppUserIdByEmail(userEmail));
         if(memberships == null) return false;
-        return memberships.getRoles().contains("ADMIN");
+        return roleCoreService.getRolesByIds(memberships.getRolesId()).stream()
+            .map(role -> role.getRoleName())
+            .collect(Collectors.toSet())
+            .contains("ADMIN");
+        
     }
 
     public List<String> getOrganisationPermissions(String org_id) {

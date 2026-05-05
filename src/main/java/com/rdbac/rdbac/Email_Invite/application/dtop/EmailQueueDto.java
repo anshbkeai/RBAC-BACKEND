@@ -13,4 +13,5 @@ public class EmailQueueDto {
 
     private Email_Invitation emailInvitation;
     private String token;
+    private boolean newUser;
 }
