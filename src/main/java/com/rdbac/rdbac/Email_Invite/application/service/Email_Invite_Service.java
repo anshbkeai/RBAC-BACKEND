@@ -80,14 +80,14 @@ public class Email_Invite_Service {
         }
 
         App_User invitedUser =  appUserCoreServiceImplementaion.Return_User_Exist(emailInviteDTO.getInvitedUserEmail());
-       if(invitedUser == null) {
+        boolean isNewUser = false;
+        if(invitedUser == null) {
         // so about that if not prenset then we can about send to that Stauts is about pending to login , and ask for the Login 
-            throw new UserNotFoundException("Target user does not exist"); 
-       }
-       
-       if( (invitedUser.getOrgaisationId() != null &&invitedUser.getOrgaisationId().contains(emailInviteDTO.getOrganisationId()))){
-        return "User Already in. the Organisation ";
-       }
+            isNewUser = true;
+        }
+        else if( (invitedUser.getOrgaisationId() != null &&invitedUser.getOrgaisationId().contains(emailInviteDTO.getOrganisationId()))){
+            return "User Already in. the Organisation ";
+        }
 
        Email_Invitation emailInvitation;
        Optional<Email_Invitation> email =emailInvitationRepository.
@@ -116,7 +116,7 @@ public class Email_Invite_Service {
 
        
        
-       EmailQueueDto emailQueueDto = new EmailQueueDto(emailInvitation, inviteToken);
+       EmailQueueDto emailQueueDto = new EmailQueueDto(emailInvitation, inviteToken, isNewUser);
        try {
 
         String emailQueueDtoJson = objectMapper.writeValueAsString(emailQueueDto);

@@ -87,14 +87,23 @@ This can be optimized later by:
     @GetMapping("/me/organisation/admin")
     public ResponseEntity<Map<String,String>> getOrganisationAdmin() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-       List<Org_memberships> orgMap =
+       List<OrganisationMembershipDTO> orgMap =
                 organisation_Memership_Service
-                    .getuserMemberships(appUserCoreServiceImplementaion.getAppUserIdByEmail(email))
+                    .getuserMembershipsV1(appUserCoreServiceImplementaion.getAppUserIdByEmail(email))
                     .stream()
                     .filter(m -> m.getRoles().contains("ADMIN"))
                     .toList();
         Map<String,String> map = new HashMap<>();
         orgMap.stream().forEach(x -> map.put(x.getOrg_id(), organisationService.orgNameById(x.getOrg_id())));
+        return  ResponseEntity.ok(map);
+
+    }
+
+     @GetMapping("/me/organisation/get/v1")
+    public ResponseEntity<Map<String , OrganisationMembershipDTO >> getOrganisationEnrolledByMeV1() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Map<String , OrganisationMembershipDTO > map = organisation_Memership_Service.getuserMembershipsV1(appUserCoreServiceImplementaion.getAppUserIdByEmail(email)).stream()
+                                .collect(Collectors.toMap(org -> org.getOrg_id(), org -> org));
         return  ResponseEntity.ok(map);
 
     }

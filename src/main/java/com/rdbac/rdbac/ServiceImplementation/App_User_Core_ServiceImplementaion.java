@@ -70,7 +70,7 @@ public class App_User_Core_ServiceImplementaion implements App_User_Core_Service
     @Override
     public App_User Return_User_Exist(String email) {
         return app_User_Repositry.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+                .orElse(null);
     }
 
 
