@@ -23,23 +23,18 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Component
+
 @Slf4j
+@RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter  {
 
-    private JWTServiceImplementation jwtServiceImplementation;
-    private UserServiceImplementation userServiceImplementation;
+    private final JWTServiceImplementation jwtServiceImplementation;
+    private final UserServiceImplementation userServiceImplementation;
     private final ObjectMapper objectMapper;
-    public JwtFilter(JWTServiceImplementation jwtServiceImplementation,
-                    UserServiceImplementation userServiceImplementation,
-                    ObjectMapper objectMapper
-    ) {
-        this.userServiceImplementation = userServiceImplementation;
-        this.jwtServiceImplementation = jwtServiceImplementation;
-        this.objectMapper = objectMapper;
-    }
+    
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)

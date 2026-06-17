@@ -29,7 +29,7 @@ public class OrganizationCommandService {
        Organisation organisation =  organisation_Repositry.findById(orgId).orElseThrow(() -> new OrganizationNotFoundException("Organsiation not found"));
        // now i have to delet it 
 
-       if(!organisation.getCreated_by_user_id().equals(app_User_Core_ServiceImplementaion.getAppUserIdByEmail(deletingUserEmail)) ){
+       if(!organisation.getCreatedByUserId().equals(app_User_Core_ServiceImplementaion.getAppUserIdByEmail(deletingUserEmail)) ){
         throw new InvalidRolePermissionConfigException("You donot have the acccess");
        }
        organisation_Memebership_Repository.deleteAllByOrg_id(orgId);

@@ -33,7 +33,7 @@ public class RoleCoreService {
     public String updateRole(RoleCreateDto createDto , String authUser) {
         Organisation organisation = organisation_Repositry.findById(createDto.getOrganisationId()).orElseThrow(() ->  new OrganizationNotFoundException("Not Found Organisation"));
         String appUserId = app_User_Repositry.findByEmail(authUser).orElseThrow().getUser_id();
-        if(!organisation.getCreated_by_user_id().equals(appUserId)) {
+        if(!organisation.getCreatedByUserId().equals(appUserId)) {
             throw new InvalidRolePermissionConfigException("Only Organisation Creator can update role permissions ");
         }
         if(!organisation.getCustom_permission_Created().containsAll(createDto.getPermissions())) throw new InvalidRolePermissionConfigException("Permission  mismacth ");

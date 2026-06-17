@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collector;
+
 import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,7 @@ import com.rdbac.rdbac.Pojos.Organisation;
 import com.rdbac.rdbac.Repositry.Organisation_Memebership_Repository;
 import com.rdbac.rdbac.Repositry.Organisation_Repositry;
 import com.rdbac.rdbac.Role_Permission.application.service.RoleCoreService;
-import com.rdbac.rdbac.Role_Permission.domain.model.Role;
+
 import com.rdbac.rdbac.ServiceImplementation.App_User_Core_ServiceImplementaion;
 import com.rdbac.rdbac.audit.domain.model.Audit;
 import com.rdbac.rdbac.exceptions.InvalidRolePermissionConfigException;
@@ -107,7 +107,7 @@ public class OrganisationService {
         
         organisation.setOrg_id(UUID.randomUUID().toString());
         organisation.setName(orgainsationDto.getName());
-        organisation.setCreated_by_user_id(app_User_Core_ServiceImplementaion.getAppUserIdByEmail(user_created_email));
+        organisation.setCreatedByUserId(app_User_Core_ServiceImplementaion.getAppUserIdByEmail(user_created_email));
         organisation.setCustome_roles_Created(orgainsationDto.getCustomRoles());
         organisation.setCustom_permission_Created(orgainsationDto.getCustomPermissions());
 
@@ -146,7 +146,7 @@ public class OrganisationService {
 
         Organisation organisation = organisation_Repositry.findById(org_id).get();
         OrganisationResponse organisationResponse = new OrganisationResponse();
-        organisationResponse.setCreator_user_id(organisation.getCreated_by_user_id());
+        organisationResponse.setCreator_user_id(organisation.getCreatedByUserId());
         organisationResponse.setName(organisation.getName());
         
         organisationResponse.setCustome_roles_Created(organisation.getCustome_roles_Created());
@@ -175,7 +175,7 @@ public class OrganisationService {
             .map(org -> {
             OrganisationResponse response = new OrganisationResponse();
             response.setId(org.getOrg_id());
-            response.setCreator_user_id(org.getCreated_by_user_id());
+            response.setCreator_user_id(org.getCreatedByUserId());
             response.setName(org.getName());
             response.setCustome_roles_Created(org.getCustome_roles_Created());
             response.setCustome_permission_Created(org.getCustom_permission_Created());
@@ -245,12 +245,9 @@ public class OrganisationService {
     }
 
     public boolean isAdminUserByEmail(String org_id, String userEmail) {
-        Org_memberships memberships = organisation_Memebership_Repository.findByOrg_idandfindByUser_id(org_id,app_User_Core_ServiceImplementaion.getAppUserIdByEmail(userEmail));
-        if(memberships == null) return false;
-        return roleCoreService.getRolesByIds(memberships.getRolesId()).stream()
-            .map(role -> role.getRoleName())
-            .collect(Collectors.toSet())
-            .contains("ADMIN");
+        return getOrgAdmin(app_User_Core_ServiceImplementaion.getAppUserIdByEmail(userEmail))
+                                            .stream()
+                                            .anyMatch(x -> x.getOrg_id().equals(org_id));
         
     }
 
@@ -258,4 +255,8 @@ public class OrganisationService {
         Organisation organisation = organisation_Repositry.findById(org_id).orElseThrow(() -> new OrganizationNotFoundException("Organization not found"));
         return organisation.getCustom_permission_Created().stream().toList();
     }
+    public List<Organisation> getOrgAdmin(String userId) {
+        return organisation_Repositry.findByCreatedByUserId(userId);
+    }
+
 }

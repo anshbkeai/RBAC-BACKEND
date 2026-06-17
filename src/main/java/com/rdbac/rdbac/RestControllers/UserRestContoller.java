@@ -9,6 +9,7 @@ import com.rdbac.rdbac.Organisation.DTO.OrganisationResponse;
 import com.rdbac.rdbac.Organisation.Service.OrganisationService;
 import com.rdbac.rdbac.Organisation.Service.Organisation_Memership_Service;
 import com.rdbac.rdbac.Pojos.Org_memberships;
+import com.rdbac.rdbac.Pojos.Organisation;
 import com.rdbac.rdbac.ServiceImplementation.App_User_Core_ServiceImplementaion;
 
 import lombok.RequiredArgsConstructor;
@@ -87,14 +88,11 @@ This can be optimized later by:
     @GetMapping("/me/organisation/admin")
     public ResponseEntity<Map<String,String>> getOrganisationAdmin() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-       List<OrganisationMembershipDTO> orgMap =
-                organisation_Memership_Service
-                    .getuserMembershipsV1(appUserCoreServiceImplementaion.getAppUserIdByEmail(email))
-                    .stream()
-                    .filter(m -> m.getRoles().contains("ADMIN"))
-                    .toList();
-        Map<String,String> map = new HashMap<>();
-        orgMap.stream().forEach(x -> map.put(x.getOrg_id(), organisationService.orgNameById(x.getOrg_id())));
+        Map<String,String> map  = organisationService.getOrgAdmin(
+            appUserCoreServiceImplementaion.getAppUserIdByEmail(email)
+        ).stream()
+        .collect(Collectors.toMap(Organisation::getOrg_id, Organisation::getName))
+        ;
         return  ResponseEntity.ok(map);
 
     }

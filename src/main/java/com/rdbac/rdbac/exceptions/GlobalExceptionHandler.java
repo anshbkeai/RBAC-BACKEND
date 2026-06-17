@@ -168,6 +168,17 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiError> handleRuntimeGlobalException(RuntimeException ex, WebRequest request) {
+        ApiError error = new ApiError(
+            ex.getMessage() , 
+            "INTERNAL_SERVER_ERROR",
+            request.getDescription(false).replace("uri=", ""),
+            LocalDateTime.now()
+        );
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     
 }
 
