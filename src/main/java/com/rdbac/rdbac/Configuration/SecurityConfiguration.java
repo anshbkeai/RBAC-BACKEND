@@ -13,27 +13,31 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rdbac.rdbac.Filter.CorrelationIdFilter;
 import com.rdbac.rdbac.Filter.JwtFilter;
+import com.rdbac.rdbac.ServiceImplementation.JWTServiceImplementation;
+import com.rdbac.rdbac.ServiceImplementation.UserServiceImplementation;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfiguration {
 
-    private JwtFilter jwtFilter;
     private final CorrelationIdFilter correlationIdFilter;
+    private final JWTServiceImplementation jwtServiceImplementation;
+    private final UserServiceImplementation userServiceImplementation;
+    private final ObjectMapper objectMapper;
+
     
     @Value("${REACT_APP_URL}")
     private String reactAppUri;
-   public SecurityConfiguration(JwtFilter jwtFilter ,
-                                CorrelationIdFilter correlationIdFilter
-
-   ) {
-    this.jwtFilter = jwtFilter;
-    this.correlationIdFilter = correlationIdFilter;
-   }
+   
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity ) throws Exception {
+        JwtFilter jwtFilter = new JwtFilter(jwtServiceImplementation, userServiceImplementation , objectMapper);
             httpSecurity.csrf(csrf -> csrf.disable())
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     .cors(cors -> cors.configurationSource(corsConfiguration()))
