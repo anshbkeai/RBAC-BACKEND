@@ -1,6 +1,7 @@
 package com.rdbac.rdbac.newSystem.ClientCredentials.api;
 
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.rdbac.rdbac.newSystem.ClientCredentials.dto.ClientAuthResponse;
@@ -35,9 +36,9 @@ public class ClientController {
     }
 
     @GetMapping
-    public ResponseEntity<Boolean> isAlreadyCredentialsExist(@RequestBody ClientOrganisationRequest organisationId) {
+    public ResponseEntity<Boolean> isAlreadyCredentialsExist(@RequestParam String organisationId) {
         String authencticatedUser = SecurityContextHolder.getContext().getAuthentication().getName();
-        if(clientService.isAlreadyCredentialsExist(organisationId.organisationId(), authencticatedUser)) {
+        if(clientService.isAlreadyCredentialsExist(organisationId, authencticatedUser)) {
             return new ResponseEntity<>( true, HttpStatus.CONFLICT);
         }   
         else {
